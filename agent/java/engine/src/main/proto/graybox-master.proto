@@ -1,0 +1,40 @@
+syntax = "proto2";
+
+    // 上报可疑信息
+    message pb_vul_data
+    {
+        required string class_func_name = 1;        // 类:函数名
+        required string php_file_path = 2;          // 触发漏洞的php文件路径
+        required uint32 vul_line = 3;               // 触发漏洞行号
+        repeated string args = 4;                   // 触发漏洞参数列表
+        repeated string trace_stack = 5;            // 调用历史
+    }
+
+    message pb_vul_info
+    {
+        required string vul_name = 1;               // 特征名称
+        required string url = 2;                    // 触发漏洞的URL
+        required pb_vul_data vul_data = 3;          // 漏洞数据
+        required uint64 time_stamp = 4;             // 发现漏洞时的时间戳
+        required uint64 subtask_id = 5;				// 漏洞对应的子任务ID
+        required string	request_method = 6;			// 请求方法，GET | POST
+        required string	poc_name = 7;				// POC名称
+        required uint64 task_id = 8;                // 大任务id
+        optional bytes 	post_body = 9;              // 可能存在的post body
+    }
+
+    message pb_graybox_vul
+    {
+        required string host_name = 2;              // 宿主机名称
+        required string host_ip = 3;                // 宿主机ip
+        required uint64 time_stamp = 4;             // 当前时间戳
+        repeated pb_vul_info vul_info = 5;          // 漏洞信息
+    }
+
+    message graybox_vul_response
+    {
+        required uint32			error_code = 1;		// 错误码, 0=成功
+        optional string			error_reason = 2;	// 错误原因
+    }
+
+

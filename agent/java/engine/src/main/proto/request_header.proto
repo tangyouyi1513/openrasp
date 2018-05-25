@@ -1,0 +1,10 @@
+syntax = "proto2";
+// 需要压缩加密 先压缩后加密
+// 所有消息头部
+message pb_header
+{
+    required uint32 version = 1;        // pb版本号
+    required uint32 encrypt_code = 2;   // 密钥序号
+    required uint32 compress_method = 3;// 压缩方法，0表示不压缩
+    required bytes data = 4;            // 加密数据
+}      
