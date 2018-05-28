@@ -18,26 +18,28 @@ package com.baidu.openrasp.messaging;
 import com.baidu.openrasp.woodpecker.AESUtils;
 import com.baidu.openrasp.woodpecker.GrayboxMaster;
 import com.baidu.openrasp.woodpecker.RequestHeader;
-import net.sf.json.JSONObject;
-import org.apache.commons.lang.StringUtils;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.google.protobuf.ByteString;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.AppenderSkeleton;
 import org.apache.log4j.helpers.LogLog;
 import org.apache.log4j.spi.LoggingEvent;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import com.google.protobuf.*;
+
 /**
-　　* @Description: 啄木鸟漏洞信息上报Appender
-　　* @author anyang
-　　* @date 2018/5/24 19:05
-　　*/
+ * 　　* @Description: 啄木鸟漏洞信息上报Appender
+ * 　　* @author anyang
+ * 　　* @date 2018/5/24 19:05
+ */
 public class AlarmPeckarHttpAppender extends AppenderSkeleton {
     /**
-     *啄木鸟流量标识
+     * 啄木鸟流量标识
      */
-    public static final String WOODPECKER_TAG_BEGIN="BD-rain inf-ssl-duty-scan";
-    public static final String WOODPECKER_TAG_END="GrAyBoX";
+    public static final String WOODPECKER_TAG_BEGIN = "BD-rain inf-ssl-duty-scan";
+    public static final String WOODPECKER_TAG_END = "GrAyBoX";
 
     private static final int DEFAULT_CONNECTION_TIMEOUT = 10000;
     private static final int DEFAULT_READ_TIMEOUT = 10000;
@@ -47,9 +49,9 @@ public class AlarmPeckarHttpAppender extends AppenderSkeleton {
     private int connectionTimeout = -1;
     private int readTimeout = -1;
     /**
-     *AES加密秘钥序号
+     * AES加密秘钥序号
      */
-    public static int encryptCode=0;
+    public static int encryptCode = 0;
 
     public AlarmPeckarHttpAppender() {
 
@@ -74,15 +76,15 @@ public class AlarmPeckarHttpAppender extends AppenderSkeleton {
 
     public boolean checkEntryConditions() {
 
-        if (httpClient == null){
+        if (httpClient == null) {
             LogLog.warn("HttpClient need to be initialized.");
             return false;
 
-        }else if(this.closed){
+        } else if (this.closed) {
             LogLog.warn("Not allowed to write to a closed appender.");
             return false;
 
-        }else if ((url == null) || url.trim().isEmpty()) {
+        } else if ((url == null) || url.trim().isEmpty()) {
             LogLog.warn("url need to be initialized.");
             return false;
         }
@@ -94,21 +96,21 @@ public class AlarmPeckarHttpAppender extends AppenderSkeleton {
     protected void append(LoggingEvent loggingEvent) {
 
 
-        if (checkEntryConditions()){
+        if (checkEntryConditions()) {
 
             String msg = loggingEvent.getMessage().toString();
-            JSONObject jsonObject = JSONObject.fromObject(msg);
-            String userAgent=jsonObject.getString("user_agent");
+            JsonObject jsonObject = new JsonParser().parse(msg).getAsJsonObject();
+            String userAgent = jsonObject.get("user_agent").getAsString();
             //判断是否是啄木鸟流量
-            if (userAgent.contains(WOODPECKER_TAG_BEGIN)&&userAgent.contains(WOODPECKER_TAG_END)){
+            if (userAgent.contains(WOODPECKER_TAG_BEGIN) && userAgent.contains(WOODPECKER_TAG_END)) {
 
-                ByteString encryped=ByteString.copyFrom(getEncrypBytes(msg));
-                RequestHeader.pb_header.Builder builder=RequestHeader.pb_header.newBuilder();
+                ByteString encryped = ByteString.copyFrom(getEncrypBytes(msg));
+                RequestHeader.pb_header.Builder builder = RequestHeader.pb_header.newBuilder();
                 builder.setData(encryped);
                 builder.setVersion(2);
                 builder.setEncryptCode(encryptCode);
                 builder.setCompressMethod(0);
-                httpClient.request(url, builder.build().toByteArray() , connectionTimeout, readTimeout);
+                httpClient.request(url, builder.build().toByteArray(), connectionTimeout, readTimeout);
             }
 
         }
@@ -116,7 +118,7 @@ public class AlarmPeckarHttpAppender extends AppenderSkeleton {
     }
 
 
-    public byte[] getEncrypBytes(String s){
+    public byte[] getEncrypBytes(String s) {
 
         /**
          　　* @Description: 实例化protobuf类，并加密
@@ -125,51 +127,51 @@ public class AlarmPeckarHttpAppender extends AppenderSkeleton {
          　　* @author anyang
          　　* @date 2018/5/24 19:09
          　　*/
-        JSONObject jsonObject = JSONObject.fromObject(s);
-        byte[] res=null;
+        JsonObject jsonObject = new JsonParser().parse(s).getAsJsonObject();
+        byte[] res = null;
         GrayboxMaster.pb_vul_data.Builder vulDataBuilder = GrayboxMaster.pb_vul_data.newBuilder();
         GrayboxMaster.pb_vul_info.Builder vulInfoBuilder = GrayboxMaster.pb_vul_info.newBuilder();
         GrayboxMaster.pb_graybox_vul.Builder grayboxVulBuilder = GrayboxMaster.pb_graybox_vul.newBuilder();
 
-        vulDataBuilder.addArgs(jsonObject.getString("attack_params"));
-        vulDataBuilder.addTraceStack(jsonObject.getString("stack_trace"));
+        vulDataBuilder.addArgs(jsonObject.get("attack_params").getAsString());
+        vulDataBuilder.addTraceStack(jsonObject.get("stack_trace").getAsString());
         String separator = System.getProperty("file.separator");
-        String basePath=jsonObject.getString("base_path");
-        String filePath=basePath+StringUtils.join(jsonObject.getString("path").split("/"),separator);
+        String basePath = jsonObject.get("base_path").getAsString();
+        String filePath = basePath + StringUtils.join(jsonObject.get("path").getAsString().split("/"), separator);
         vulDataBuilder.setPhpFilePath(filePath);
-        String className=getClassName(jsonObject.getString("stack_trace"));
+        String className = getClassName(jsonObject.get("stack_trace").getAsString());
         vulDataBuilder.setClassFuncName(className);
         vulDataBuilder.setVulLine(0);
 
-        vulInfoBuilder.setRequestMethod(jsonObject.getString("request_method"));
-        vulInfoBuilder.setVulName(jsonObject.getString("attack_type"));
-        vulInfoBuilder.setUrl(jsonObject.getString("referer"));
-        long eventTime=convertTimeToLong(jsonObject.getString("event_time"));
+        vulInfoBuilder.setRequestMethod(jsonObject.get("request_method").getAsString());
+        vulInfoBuilder.setVulName(jsonObject.get("attack_type").getAsString());
+        vulInfoBuilder.setUrl(jsonObject.get("referer").getAsString());
+        long eventTime = convertTimeToLong(jsonObject.get("event_time").getAsString());
         vulInfoBuilder.setTimeStamp(eventTime);
         //根据user_agent获取任务id、子任务id和proc_name
-        String userAgent=jsonObject.getString("user_agent");
-        String[]arr=userAgent.substring(userAgent.lastIndexOf("(")+1,userAgent.lastIndexOf(")")).split(",");
+        String userAgent = jsonObject.get("user_agent").getAsString();
+        String[] arr = userAgent.substring(userAgent.lastIndexOf("(") + 1, userAgent.lastIndexOf(")")).split(",");
         vulInfoBuilder.setPocName(arr[2]);
         vulInfoBuilder.setTaskId(Integer.valueOf(arr[0]));
         vulInfoBuilder.setSubtaskId(Integer.valueOf(arr[1]));
 //        vulInfoBuilder.setPocName("common_sql_timebase_1_all");
 //        vulInfoBuilder.setTaskId(641805010);
 //        vulInfoBuilder.setSubtaskId(64180);
-        if (jsonObject.get("body")!=null){
+        if (jsonObject.get("body") != null) {
 
-            ByteString bytes= ByteString.copyFrom(jsonObject.getString("body").getBytes());
+            ByteString bytes = ByteString.copyFrom(jsonObject.get("body").getAsString().getBytes());
             vulInfoBuilder.setPostBody(bytes);
         }
         vulInfoBuilder.setVulData(vulDataBuilder.build());
         grayboxVulBuilder.setTimeStamp(System.currentTimeMillis());
-        grayboxVulBuilder.setHostIp(jsonObject.getString("server_ip"));
+        grayboxVulBuilder.setHostIp(jsonObject.get("server_ip").getAsString());
         grayboxVulBuilder.addVulInfo(vulInfoBuilder.build());
-        grayboxVulBuilder.setHostName(jsonObject.getString("host_name"));
-        byte[] encrypBytes=grayboxVulBuilder.build().toByteArray();
+        grayboxVulBuilder.setHostName(jsonObject.get("host_name").getAsString());
+        byte[] encrypBytes = grayboxVulBuilder.build().toByteArray();
         String key = AESUtils.getKey();
-        encryptCode= AESUtils.getIndex(key);
+        encryptCode = AESUtils.getIndex(key);
         try {
-            res = AESUtils.encrypt(encrypBytes, key.substring(0,16));
+            res = AESUtils.encrypt(encrypBytes, key.substring(0, 16));
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -213,10 +215,10 @@ public class AlarmPeckarHttpAppender extends AppenderSkeleton {
         String[] arr = stackTrace.split("\\n");
 
         for (String s : arr) {
-            if (s.contains("reflect")||s.contains("invoke")){
+            if (s.contains("reflect") || s.contains("invoke")) {
                 continue;
             }
-            String[] clazz = s.substring(s.indexOf("(")+1, s.indexOf(")")).split(":");
+            String[] clazz = s.substring(s.indexOf("(") + 1, s.indexOf(")")).split(":");
             if (clazz.length <= 1) {
                 className = clazz[0];
                 break;

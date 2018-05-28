@@ -53,7 +53,6 @@ public class CoyoteRequest extends AbstractRequest {
         return null;
     }
 
-
     /**
      * (none-javadoc)
      *

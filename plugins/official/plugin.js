@@ -300,11 +300,7 @@ function is_outside_webroot(appBasePath, realpath, path) {
     var verdict = false
 
     if (realpath.indexOf(appBasePath) == -1 && (path.indexOf('/../') !== -1 || path.indexOf('\\..\\') !== -1)) {
-        return {
-            action:     'block',
-            message:    '目录遍历攻击，跳出web目录范围 (' + appBasePath + ')',
-            confidence: 90
-        }
+        verdict = true
     }
 
     return verdict
@@ -525,7 +521,8 @@ if (RASP.get_jsengine() !== 'v8') {
         // 检查常见探测域名
         else if (algorithmConfig.ssrf_common.action != 'ignore')
         {
-            if (hostname == 'requestb.in' 
+            if (hostname == 'requestb.in'
+            || hostname == 'transfer.sh'
             || hostname.endsWith('.vcap.me') 
             || hostname.endsWith('.xip.name') || hostname.endsWith('.xip.io') || hostname.endsWith('.nip.io') 
             || hostname.endsWith('.burpcollaborator.net'))

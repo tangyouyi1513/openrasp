@@ -101,6 +101,7 @@ public final class HttpServletRequest extends AbstractRequest {
     public String getRemoteAddr() {
         return Reflection.invokeStringMethod(request, "getRemoteAddr", EMPTY_CLASS);
     }
+
     /**
      * (none-javadoc)
      *

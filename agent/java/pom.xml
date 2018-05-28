@@ -131,6 +131,14 @@
                                     <pattern>st4hidden.org.antlr</pattern>
                                     <shadedPattern>com.baidu.openrasp.st4hidden.org.antlr</shadedPattern>
                                 </relocation>
+                                <relocation>
+                                    <pattern>javassist</pattern>
+                                    <shadedPattern>com.baidu.openrasp.javassist</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>google.protobuf</pattern>
+                                    <shadedPattern>com.baidu.openrasp.google.protobuf</shadedPattern>
+                                </relocation>
                             </relocations>
                         </configuration>
                     </execution>
