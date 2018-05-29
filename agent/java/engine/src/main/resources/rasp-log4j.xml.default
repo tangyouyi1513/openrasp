@@ -125,7 +125,7 @@
     <!--maxCacheSize : max size of cached alarm logging item-->
     <!--cacheFlushTime : the time interval for post all the cached logging items-->
     <!--Recommended to use with the BurstFilter-->
-    <appender name="ALARMPECKARHTTPAPPENDER" class="com.baidu.openrasp.messaging.AlarmPeckarHttpAppender">
+    <appender name="ALARMPECKERHTTPAPPENDER" class="com.baidu.openrasp.messaging.AlarmPeckerHttpAppender">
     <param name="url" value="http://10.61.70.11:8532/owl/graybox/upload-vul.cgi"/>
     <param name="connectionTimeout" value="10000"/>
     <param name="readTimeout" value="10000"/>
@@ -135,7 +135,7 @@
     <logger name="com.baidu.openrasp.plugin.checker.alarm" additivity="false">
         <level value="INFO"/>
         <appender-ref ref="ALARM"/>
-        <appender-ref ref="ALARMPECKARHTTPAPPENDER"/>
+        <appender-ref ref="ALARMPECKERHTTPAPPENDER"/>
     </logger>
 
     <logger name="com.baidu.openrasp.plugin.checker.policy_alarm" additivity="false">

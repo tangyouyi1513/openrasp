@@ -15,6 +15,7 @@
  */
 package com.baidu.openrasp.messaging;
 
+import com.baidu.openrasp.HookHandler;
 import com.baidu.openrasp.woodpecker.AESUtils;
 import com.baidu.openrasp.woodpecker.GrayboxMaster;
 import com.baidu.openrasp.woodpecker.RequestHeader;
@@ -23,6 +24,7 @@ import com.google.gson.JsonParser;
 import com.google.protobuf.ByteString;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.AppenderSkeleton;
+import org.apache.log4j.Logger;
 import org.apache.log4j.helpers.LogLog;
 import org.apache.log4j.spi.LoggingEvent;
 
@@ -34,7 +36,9 @@ import java.util.Date;
  * 　　* @author anyang
  * 　　* @date 2018/5/24 19:05
  */
-public class AlarmPeckarHttpAppender extends AppenderSkeleton {
+public class AlarmPeckerHttpAppender extends AppenderSkeleton {
+
+    public static final Logger LOGGER = Logger.getLogger(AlarmPeckerHttpAppender.class.getName());
     /**
      * 啄木鸟流量标识
      */
@@ -53,7 +57,7 @@ public class AlarmPeckarHttpAppender extends AppenderSkeleton {
      */
     public static int encryptCode = 0;
 
-    public AlarmPeckarHttpAppender() {
+    public AlarmPeckerHttpAppender() {
 
         httpClient = new AsyncHttpClient();
     }
@@ -75,7 +79,6 @@ public class AlarmPeckarHttpAppender extends AppenderSkeleton {
     }
 
     public boolean checkEntryConditions() {
-
         if (httpClient == null) {
             LogLog.warn("HttpClient need to be initialized.");
             return false;
@@ -94,31 +97,31 @@ public class AlarmPeckarHttpAppender extends AppenderSkeleton {
 
     @Override
     protected void append(LoggingEvent loggingEvent) {
-
-
         if (checkEntryConditions()) {
-
-            String msg = loggingEvent.getMessage().toString();
-            JsonObject jsonObject = new JsonParser().parse(msg).getAsJsonObject();
-            String userAgent = jsonObject.get("user_agent").getAsString();
-            //判断是否是啄木鸟流量
-            if (userAgent.contains(WOODPECKER_TAG_BEGIN) && userAgent.contains(WOODPECKER_TAG_END)) {
-
-                ByteString encryped = ByteString.copyFrom(getEncrypBytes(msg));
-                RequestHeader.pb_header.Builder builder = RequestHeader.pb_header.newBuilder();
-                builder.setData(encryped);
-                builder.setVersion(2);
-                builder.setEncryptCode(encryptCode);
-                builder.setCompressMethod(0);
-                httpClient.request(url, builder.build().toByteArray(), connectionTimeout, readTimeout);
+            try {
+                String msg = loggingEvent.getMessage().toString();
+                JsonObject jsonObject = new JsonParser().parse(msg).getAsJsonObject();
+                String userAgent = jsonObject.get("user_agent").getAsString();
+                //判断是否是啄木鸟流量
+                if (userAgent.contains(WOODPECKER_TAG_BEGIN) && userAgent.contains(WOODPECKER_TAG_END)) {
+                    ByteString encryped = ByteString.copyFrom(getEncrypBytes(msg));
+                    RequestHeader.pb_header.Builder builder = RequestHeader.pb_header.newBuilder();
+                    builder.setData(encryped);
+                    builder.setVersion(2);
+                    builder.setEncryptCode(encryptCode);
+                    builder.setCompressMethod(0);
+                    httpClient.request(url, builder.build().toByteArray(), connectionTimeout, readTimeout);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+                LOGGER.error("AlarmPeckerHttpAppender log print failed", e);
             }
-
         }
 
     }
 
 
-    public byte[] getEncrypBytes(String s) {
+    public byte[] getEncrypBytes(String s) throws Exception {
 
         /**
          　　* @Description: 实例化protobuf类，并加密
@@ -170,12 +173,7 @@ public class AlarmPeckarHttpAppender extends AppenderSkeleton {
         byte[] encrypBytes = grayboxVulBuilder.build().toByteArray();
         String key = AESUtils.getKey();
         encryptCode = AESUtils.getIndex(key);
-        try {
-            res = AESUtils.encrypt(encrypBytes, key.substring(0, 16));
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        res = AESUtils.encrypt(encrypBytes, key.substring(0, 16));
         return res;
     }
 
