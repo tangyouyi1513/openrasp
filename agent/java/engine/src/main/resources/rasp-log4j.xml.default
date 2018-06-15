@@ -69,6 +69,17 @@
         <!--</filter>-->
     </appender>
 
+    <appender name="ERROR_HANDLER" class="com.baidu.openrasp.messaging.ErrorHandlerAppender">
+        <layout class="com.baidu.openrasp.log4j.PatternLayout">
+            <param name="ConversionPattern" value="%d %-5p [%t][%c] %m%n"/>
+        </layout>
+        <filter class="org.apache.log4j.varia.LevelRangeFilter">
+            <param name="levelMin" value="WARN" />
+            <param name="levelMax" value="ERROR" />
+            <param name="AcceptOnMatch" value="true" />
+        </filter>
+    </appender>
+
     <!-- Configuration templates of syslog(TCP) -->
     <!-- Add to specific logger as appender-ref like this: <appender-ref ref="SYSLOGTCP" /> -->
     <!-- Modify localhost to the host of your syslog server -->
@@ -152,6 +163,7 @@
     <root>
         <level value="INFO"/>
         <appender-ref ref="RASP"/>
+        <appender-ref ref="ERROR_HANDLER"/>
     </root>
 
 </log4j:configuration>

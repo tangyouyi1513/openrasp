@@ -119,6 +119,7 @@
                         <manifestEntries>
                             <Rasp-Module-Name>rasp-engine</Rasp-Module-Name>
                             <Rasp-Module-Class>com.baidu.openrasp.EngineBoot</Rasp-Module-Class>
+                            <Rasp-Module-Version>3.2</Rasp-Module-Version>
                         </manifestEntries>
                     </archive>
                 </configuration>

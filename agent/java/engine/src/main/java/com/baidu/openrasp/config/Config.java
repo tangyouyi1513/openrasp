@@ -55,6 +55,9 @@ public class Config extends FileScanListener {
         SQL_SLOW_QUERY_MIN_ROWS("sql.slowquery.min_rows", "500"),
         BLOCK_STATUS_CODE("block.status_code", "302"),
         DEBUG("debug.level", "0"),
+        CLOUD_OPEN("cloud.open", "false"),
+        AGENT_UDP_PORT("cloud.port", "-1"),
+        HEARTBEAT_DELAY("cloud.heartbeat.delay", "60"),
         ALGORITHM_CONFIG("algorithm.config", "{}", false);
 
 
@@ -101,6 +104,9 @@ public class Config extends FileScanListener {
     private int ognlMinLength;
     private int blockStatusCode;
     private int debugLevel;
+    private int agentPort;
+    private boolean isCloudOpen;
+    private int heartbeatDelay;
     private JsonObject algorithmConfig;
 
     static {
@@ -567,6 +573,47 @@ public class Config extends FileScanListener {
     }
 
     /**
+     * 获取云控 cloud udp 端口
+     *
+     * @return udp 端口号
+     */
+    public synchronized int getAgentPort() {
+        return agentPort;
+    }
+
+    /**
+     * 设置云控 cloud udp 端口
+     * 设置了该值则开启云控
+     *
+     * @param agentPort udp 端口号
+     */
+    public synchronized void setAgentPort(String agentPort) {
+        this.agentPort = Integer.parseInt(agentPort);
+        if (this.agentPort < 0) {
+            this.agentPort = -1;
+        }
+    }
+
+    public synchronized boolean isCloudOpen() {
+        return isCloudOpen;
+    }
+
+    public synchronized void setCloudOpen(String cloudOpen) {
+        this.isCloudOpen = Boolean.parseBoolean(cloudOpen);
+    }
+
+    public int getHeartbeatDelay() {
+        return heartbeatDelay;
+    }
+
+    public void setHeartbeatDelay(String heartbeatDelay) {
+        this.heartbeatDelay = Integer.parseInt(heartbeatDelay);
+        if (this.heartbeatDelay < 0) {
+            this.heartbeatDelay = 60;
+        }
+    }
+
+    /**
      * 获取检测算法配置
      *
      * @return 配置的 json 对象
@@ -647,6 +694,12 @@ public class Config extends FileScanListener {
                 setAlgorithmConfig(value);
             } else if (Item.REQUEST_PARAM_ENCODING.key.equals(key)) {
                 setRequestParamEncoding(value);
+            } else if (Item.AGENT_UDP_PORT.key.equals(key)) {
+                setAgentPort(value);
+            } else if (Item.CLOUD_OPEN.equals(key)) {
+                setCloudOpen(value);
+            } else if (Item.HEARTBEAT_DELAY.equals(key)) {
+                setHeartbeatDelay(value);
             } else {
                 isHit = false;
             }

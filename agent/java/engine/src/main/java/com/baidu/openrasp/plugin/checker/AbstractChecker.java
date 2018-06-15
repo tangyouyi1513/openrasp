@@ -16,6 +16,7 @@
 
 package com.baidu.openrasp.plugin.checker;
 
+import com.baidu.openrasp.plugin.checker.sum.SumEventListener;
 import com.baidu.openrasp.plugin.event.CheckEventDispatcher;
 import com.baidu.openrasp.plugin.event.CheckEventListener;
 import com.baidu.openrasp.plugin.info.EventInfo;
@@ -38,6 +39,7 @@ public abstract class AbstractChecker implements Checker {
 
     public AbstractChecker(boolean canBlock) {
         this.canBlock = canBlock;
+        addCheckEventListener(new SumEventListener());
     }
 
     @Override

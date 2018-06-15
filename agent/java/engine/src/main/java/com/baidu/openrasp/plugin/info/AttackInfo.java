@@ -38,7 +38,6 @@ public class AttackInfo extends EventInfo {
 
     public static final int DEFAULT_CONFIDENCE_VALUE = 100;
 
-    private CheckParameter parameter;
     private String pluginName;
     private String message;
     private String action;

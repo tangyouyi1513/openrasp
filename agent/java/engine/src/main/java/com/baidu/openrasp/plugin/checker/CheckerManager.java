@@ -17,6 +17,7 @@
 package com.baidu.openrasp.plugin.checker;
 
 import com.baidu.openrasp.plugin.checker.CheckParameter.Type;
+import com.baidu.openrasp.plugin.checker.sum.SumHandler;
 
 import java.util.EnumMap;
 
@@ -26,6 +27,8 @@ import java.util.EnumMap;
  * 用于管理 hook 点参数的检测
  */
 public class CheckerManager {
+
+    public static final SumHandler sumHandler = new SumHandler();
 
     private static EnumMap<Type, Checker> checkers = new EnumMap<Type, Checker>(Type.class);
 

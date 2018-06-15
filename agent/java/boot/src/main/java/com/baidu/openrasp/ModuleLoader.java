@@ -40,6 +40,7 @@ public class ModuleLoader {
 
     public static ClassLoader moduleClassLoader;
 
+    private static String engineVersion;
 
     // ModuleLoader 为 classloader加载的，不能通过getProtectionDomain()的方法获得JAR路径
     static {
@@ -80,6 +81,7 @@ public class ModuleLoader {
                 Attributes attributes = jarFile.getManifest().getMainAttributes();
                 jarFile.close();
                 String moduleName = attributes.getValue("Rasp-Module-Name");
+                engineVersion = attributes.getValue("Rasp-Module-Version");
                 String moduleEnterClassName = attributes.getValue("Rasp-Module-Class");
                 if (moduleName != null && moduleEnterClassName != null
                         && !moduleName.equals("") && !moduleEnterClassName.equals("")) {
@@ -120,6 +122,10 @@ public class ModuleLoader {
                 }
             }
         }
+    }
+
+    public static String getAgentEngineVersion() {
+        return engineVersion;
     }
 
 }

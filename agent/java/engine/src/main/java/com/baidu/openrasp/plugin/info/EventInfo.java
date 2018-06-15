@@ -17,6 +17,7 @@
 package com.baidu.openrasp.plugin.info;
 
 import com.baidu.openrasp.config.Config;
+import com.baidu.openrasp.plugin.checker.CheckParameter;
 import com.google.gson.Gson;
 
 import java.util.Arrays;
@@ -38,6 +39,8 @@ public abstract class EventInfo {
     public abstract String getType();
 
     public abstract Map<String, Object> getInfo();
+
+    protected CheckParameter parameter;
 
     public boolean isBlock() {
         return isBlock;
@@ -72,6 +75,14 @@ public abstract class EventInfo {
             ret.append("\n");
         }
         return ret.toString();
+    }
+
+    public CheckParameter getParameter() {
+        return parameter;
+    }
+
+    public void setParameter(CheckParameter parameter) {
+        this.parameter = parameter;
     }
 
 }

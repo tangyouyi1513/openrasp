@@ -57,12 +57,12 @@ public class TomcatSecurityChecker extends PolicyChecker {
         try {
             String serverType = SecurityPolicyInfo.getCatalinaServerType();
             if (tomcatBaseDir != null && serverType != null) {
-                checkStartUser(infos);
+                checkStartUser(checkParameter, infos);
                 if (serverType.equalsIgnoreCase("tomcat")) {
-                    checkHttpOnlyIsOpen(tomcatBaseDir, infos);
-                    checkManagerPassword(tomcatBaseDir, infos);
-                    checkDirectoryListing(tomcatBaseDir, infos);
-                    checkDefaultApp(tomcatBaseDir, infos);
+                    checkHttpOnlyIsOpen(checkParameter, tomcatBaseDir, infos);
+                    checkManagerPassword(checkParameter, tomcatBaseDir, infos);
+                    checkDirectoryListing(checkParameter, tomcatBaseDir, infos);
+                    checkDefaultApp(checkParameter, tomcatBaseDir, infos);
 
                     System.out.println("[OpenRASP] Tomcat security baseline - inspection completed");
                 }
@@ -80,7 +80,7 @@ public class TomcatSecurityChecker extends PolicyChecker {
     /**
      * 检测cookie的HttpOnly是否开启
      */
-    private void checkHttpOnlyIsOpen(String tomcatBaseDir, List<EventInfo> infos) {
+    private void checkHttpOnlyIsOpen(CheckParameter checkParameter, String tomcatBaseDir, List<EventInfo> infos) {
         File contextFile = new File(tomcatBaseDir + File.separator + "conf/context.xml");
         if (!(contextFile.exists() && contextFile.canRead())) {
             LOGGER.warn(getFormattedMessage(TOMCAT_CHECK_ERROR_LOG_CHANNEL,
@@ -101,7 +101,7 @@ public class TomcatSecurityChecker extends PolicyChecker {
             }
 
             if (!isHttpOnly) {
-                infos.add(new SecurityPolicyInfo(Type.COOKIE_HTTP_ONLY, "tomcat未在conf/context.xml文件中配置全局httpOnly.", true));
+                infos.add(new SecurityPolicyInfo(checkParameter, Type.COOKIE_HTTP_ONLY, "tomcat未在conf/context.xml文件中配置全局httpOnly.", true));
             }
         }
     }
@@ -109,11 +109,11 @@ public class TomcatSecurityChecker extends PolicyChecker {
     /**
      * 检测启动用户是否为系统管理员
      */
-    private void checkStartUser(List<EventInfo> infos) {
+    private void checkStartUser(CheckParameter checkParameter, List<EventInfo> infos) {
         String osName = System.getProperty("os.name").toLowerCase();
         if (osName.startsWith("linux") || osName.startsWith("mac")) {
             if ("root".equals(System.getProperty("user.name"))) {
-                infos.add(new SecurityPolicyInfo(Type.START_USER, "tomcat以root权限启动.", true));
+                infos.add(new SecurityPolicyInfo(checkParameter, Type.START_USER, "tomcat以root权限启动.", true));
             }
         } else if (osName.startsWith("windows")) {
             try {
@@ -123,7 +123,7 @@ public class TomcatSecurityChecker extends PolicyChecker {
                 if (userGroups != null) {
                     for (String group : userGroups) {
                         if (group.equals(WINDOWS_ADMIN_GROUP_ID)) {
-                            infos.add(new SecurityPolicyInfo(Type.START_USER, "服务器以管理员权限启动.", true));
+                            infos.add(new SecurityPolicyInfo(checkParameter, Type.START_USER, "服务器以管理员权限启动.", true));
                         }
                     }
                 }
@@ -136,7 +136,7 @@ public class TomcatSecurityChecker extends PolicyChecker {
     /**
      * 检测tomcat后台管理员角色密码是否安全
      */
-    private void checkManagerPassword(String tomcatBaseDir, List<EventInfo> infos) {
+    private void checkManagerPassword(CheckParameter checkParameter, String tomcatBaseDir, List<EventInfo> infos) {
         File userFile = new File(tomcatBaseDir + File.separator + "conf/tomcat-users.xml");
         if (!(userFile.exists() && userFile.canRead())) {
             LOGGER.warn(getFormattedMessage(TOMCAT_CHECK_ERROR_LOG_CHANNEL,
@@ -162,7 +162,7 @@ public class TomcatSecurityChecker extends PolicyChecker {
                                     String userName = user.getAttribute("username");
                                     String password = user.getAttribute("password");
                                     if (weakWords.contains(userName) && weakWords.contains(password)) {
-                                        infos.add(new SecurityPolicyInfo(Type.MANAGER_PASSWORD, "tomcat后台管理角色存在弱用户名和弱密码.", true));
+                                        infos.add(new SecurityPolicyInfo(checkParameter, Type.MANAGER_PASSWORD, "tomcat后台管理角色存在弱用户名和弱密码.", true));
                                     }
                                 }
                             }
@@ -173,7 +173,7 @@ public class TomcatSecurityChecker extends PolicyChecker {
         }
     }
 
-    private void checkDirectoryListing(String tomcatBaseDir, List<EventInfo> infos) {
+    private void checkDirectoryListing(CheckParameter checkParameter, String tomcatBaseDir, List<EventInfo> infos) {
         File webFile = new File(tomcatBaseDir + File.separator + "conf/web.xml");
         if (!(webFile.exists() && webFile.canRead())) {
             LOGGER.warn(getFormattedMessage(TOMCAT_CHECK_ERROR_LOG_CHANNEL,
@@ -200,7 +200,7 @@ public class TomcatSecurityChecker extends PolicyChecker {
                             }
                             if (isFoundDefaultClass) {
                                 if (isOpenListingDirectory(servletElement)) {
-                                    infos.add(new SecurityPolicyInfo(Type.DIRECTORY_LISTING,
+                                    infos.add(new SecurityPolicyInfo(checkParameter, Type.DIRECTORY_LISTING,
                                             "tomcat 开启了 DefaultServlet 的 Directory Listing 功能", true));
                                     return;
                                 }
@@ -259,7 +259,7 @@ public class TomcatSecurityChecker extends PolicyChecker {
     /**
      * 检测是否删除了默认安装的app
      */
-    private void checkDefaultApp(String tomcatBaseDir, List<EventInfo> infos) {
+    private void checkDefaultApp(CheckParameter checkParameter, String tomcatBaseDir, List<EventInfo> infos) {
         LinkedList<String> apps = new LinkedList<String>();
         for (String dir : DEFAULT_APP_DIRS) {
             File file = new File(tomcatBaseDir + File.separator + "webapps" + File.separator + dir);
@@ -273,7 +273,7 @@ public class TomcatSecurityChecker extends PolicyChecker {
             for (String app : apps) {
                 message.append(app).append(", ");
             }
-            infos.add(new SecurityPolicyInfo(Type.DEFAULT_APP, message.substring(0, message.length() - 2), true));
+            infos.add(new SecurityPolicyInfo(checkParameter, Type.DEFAULT_APP, message.substring(0, message.length() - 2), true));
         }
     }
 
